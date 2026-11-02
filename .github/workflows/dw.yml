@@ -1,10 +1,14 @@
 name: Unzip 下载解压到根目录
 
 on:
-  workflow_dispatch: # 手动在 Actions 页面触发
+  workflow_dispatch:
 
 permissions:
-  contents: write # 允许 workflow 往仓库写文件
+  contents: write
+
+concurrency:
+  group: unzip-push-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   unzip-and-push:
@@ -17,14 +21,31 @@ jobs:
 
       - name: Download archive
         run: |
-          curl -L -A "Mozilla/5.0 (compatible; github-actions)" \
+          set -e
+          curl -fL --retry 3 --retry-delay 2 \
+            -A "Mozilla/5.0 (compatible; github-actions)" \
             "https://mpimg.cn/down.php/4a51ed21ae80478a3718527470f1079f.zip" \
             -o archive.zip
-
-      - name: Inspect & unzip to repo root
-        run: |
+          echo "=== 下载文件信息 ==="
+          ls -lh archive.zip
           file archive.zip || true
-          # -o 覆盖已有文件；解压到当前目录（即仓库根目录）
+
+      - name: Validate zip
+        run: |
+          set -e
+          if ! unzip -t archive.zip > /tmp/unzip_test.log 2>&1; then
+            echo "::error::archive.zip 不是有效的 zip 文件"
+            cat /tmp/unzip_test.log || true
+            echo "=== 前 200 字节(hex) ==="
+            head -c 200 archive.zip | xxd | head -20 || true
+            echo "=== 前 200 字节(text) ==="
+            head -c 200 archive.zip || true
+            exit 1
+          fi
+          echo "Zip 校验通过"
+
+      - name: Unzip to repo root
+        run: |
           unzip -o archive.zip -d .
           rm -f archive.zip
 
@@ -32,9 +53,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
+          git add -A
           if git diff --cached --quiet; then
-            echo "No file changes, skip commit."
+            echo "没有文件变化，跳过 commit"
           else
             git commit -m "chore: extract remote zip into repo root"
             git push origin HEAD:${{ github.ref_name }}
