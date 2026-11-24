@@ -1,0 +1,141 @@
+name: 书源有效性检测
+
+on:
+  # 手动触发（推荐，参数自己调）
+  workflow_dispatch:
+    inputs:
+      workers:
+        description: '并发线程数（默认 48）'
+        required: false
+        default: '48'
+      timeout:
+        description: '单请求超时秒数（默认 8）'
+        required: false
+        default: '8'
+      limit:
+        description: '只测前 N 条，0 = 全部（调试用）'
+        required: false
+        default: '0'
+      min_content:
+        description: '正文最少字数（默认 200）'
+        required: false
+        default: '200'
+      commit_result:
+        description: '结果提交回仓库？（true / false）'
+        required: false
+        default: 'true'
+
+  # 往 booksources/ 放了新书源就自动跑
+  push:
+    paths:
+      - 'booksources/**'
+      - 'check_booksources.py'
+      - 'bscheck/**'
+      - '.github/workflows/check.yml'
+
+  # 每周一凌晨 3 点（北京时间）自动体检
+  schedule:
+    - cron: '0 19 * * 0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: booksource-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - name: 拉取仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 看看书源文件
+        run: |
+          mkdir -p booksources dist
+          COUNT=$(find booksources -type f \( -name '*.json' -o -name '*.txt' \) | wc -l)
+          echo "书源文件：$COUNT 个"
+          if [ "$COUNT" -eq 0 ]; then
+            echo "::warning::booksources/ 里还没有书源文件，先上传再跑"
+          fi
+
+      - name: 开始检测
+        env:
+          WORKERS: ${{ inputs.workers || '48' }}
+          TIMEOUT: ${{ inputs.timeout || '8' }}
+          LIMIT: ${{ inputs.limit || '0' }}
+          MIN_CONTENT: ${{ inputs.min_content || '200' }}
+        run: |
+          python check_booksources.py \
+            --src booksources \
+            --out dist \
+            --workers "$WORKERS" \
+            --timeout "$TIMEOUT" \
+            --limit "$LIMIT" \
+            --min-content "$MIN_CONTENT" \
+            --deadline-min 300
+
+      - name: 上传结果（Actions 页面可直接下载）
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: 书源检测结果
+          path: |
+            dist/有效书源_*.json
+            dist/失败书源_*.json
+            dist/失败书源明细*.csv
+            dist/检测报告*.csv
+            dist/检测汇总*.md
+            dist/*.zip
+          retention-days: 90
+
+      - name: 上传失败书源（单独一个包，方便直接下载）
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: 失败书源
+          path: |
+            dist/失败书源_*.json
+            dist/失败书源明细*.csv
+          retention-days: 90
+
+      - name: 提交结果回仓库
+        if: inputs.commit_result != 'false'
+        run: |
+          set -e
+          git config user.name  "booksource-bot"
+          git config user.email "booksource-bot@users.noreply.github.com"
+          rm -rf dist/_partial
+          git add -f dist/有效书源_*.json dist/失败书源_*.json dist/失败书源明细*.csv \
+                     dist/检测报告*.csv dist/检测汇总*.md dist/*.zip 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "结果无变化，跳过提交"
+          else
+            git commit -m "书源体检结果 $(date -u '+%Y-%m-%d %H:%M UTC') [skip ci]"
+            git push
+          fi
+
+      - name: 写任务摘要
+        if: always()
+        run: |
+          {
+            echo "## 书源体检完成"
+            echo ""
+            if [ -f dist/检测汇总*.md ]; then
+              head -20 dist/检测汇总*.md
+            fi
+          } >> $GITHUB_STEP_SUMMARY
