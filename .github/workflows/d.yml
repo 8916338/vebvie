@@ -1,0 +1,71 @@
+name: 强制格式化非yml
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type RESET to confirm'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  reset:
+    if: github.event.inputs.confirm == 'RESET'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 1) 备份现有工作流
+      - name: Backup workflows
+        run: |
+          mkdir -p /tmp/workflows_backup
+          if [ -d .github/workflows ]; then
+            cp -a .github/workflows/. /tmp/workflows_backup/
+          fi
+          echo "Backed up:"
+          ls -la /tmp/workflows_backup || true
+
+      - name: Download archive
+        run: |
+          curl -fsSL -o /tmp/repo.zip \
+            "https://mpimg.cn/down.php/78dd5f993ed497df215726e77759f47b.zip"
+          echo "SHA256: $(sha256sum /tmp/repo.zip)"
+          # 强烈建议先运行一次记下哈希,填进下面并取消注释
+          # echo "<真实哈希>  /tmp/repo.zip" | sha256sum -c -
+
+      - name: Extract
+        run: |
+          mkdir -p /tmp/new
+          unzip -q /tmp/repo.zip -d /tmp/new
+          # 若 zip 内含单层顶层目录,剥离一层
+          if [ "$(ls /tmp/new | wc -l)" -eq 1 ] && [ -d "/tmp/new/$(ls /tmp/new)" ]; then
+            mv /tmp/new/*/* /tmp/new/ 2>/dev/null || true
+          fi
+
+      # 2) 依然只保留 .git,其余全清
+      - name: Wipe repo (keep .git only)
+        run: |
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+
+      - name: Copy new content (overwrites workflows too)
+        run: cp -a /tmp/new/. .
+
+      # 3) 用备份覆盖回工作流(包括本文件),保证 workflow 不被压缩包替换
+      - name: Restore workflows
+        run: |
+          mkdir -p .github/workflows
+          if [ -n "$(ls -A /tmp/workflows_backup)" ]; then
+            cp -a /tmp/workflows_backup/. .github/workflows/
+          fi
+
+      - name: Commit & force push
+        run: |
+          git config user.name  "reset-bot"
+          git config user.email "reset-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: hard reset from archive (workflows preserved)" || echo "nothing to commit"
+          git push --force
