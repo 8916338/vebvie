@@ -1,0 +1,24 @@
+[
+  {
+    "bookSourceName": "❤️基友书屋",
+    "bookSourceUrl": "https://www.gaysay.com",
+    "bookSourceGroup": "",
+    "zakaDomain": "gaysay.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索无结果",
+    "zakaDetail": "",
+    "zakaFailTime": 1095
+  },
+  {
+    "bookSourceName": "🎉 七星阁网",
+    "bookSourceUrl": "https://m.7xingge.com",
+    "bookSourceGroup": "",
+    "zakaDomain": "m.7xingge.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "conn",
+    "zakaFailTime": 68
+  }
+]
