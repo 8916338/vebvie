@@ -32,6 +32,101 @@ class JsRuleError(Exception):
     """规则里含有 JS，本引擎不执行。"""
 
 
+
+# ---------------------------------------------------------------- JSONPath
+_JP_TOKEN = re.compile(r"""
+      \.\.([A-Za-z0-9_\u4e00-\u9fa5\-]+)     # ..key   递归下降
+    | \.([A-Za-z0-9_\u4e00-\u9fa5\-]+)        # .key
+    | (\.\*)                                   # .*
+    | \[\s*(\d+)\s*\]                        # [0]
+    | \[\s*(\*)\s*\]                         # [*]
+    | \[\s*'([^']+)'\s*\]                     # ['key']
+    | \[\s*"([^"]+)"\s*\]                     # ["key"]
+""", re.X)
+
+
+def _jp_tokens(path):
+    toks, pos = [], 0
+    for m in _JP_TOKEN.finditer(path):
+        if m.start() != pos:
+            break
+        pos = m.end()
+        if m.group(1):
+            toks.append(("rec", m.group(1)))
+        elif m.group(2):
+            toks.append(("key", m.group(2)))
+        elif m.group(3) is not None:
+            toks.append(("wild", "*"))
+        elif m.group(4) is not None:
+            toks.append(("idx", m.group(4)))
+        elif m.group(5) is not None:
+            toks.append(("wild", "*"))
+        elif m.group(6) is not None:
+            toks.append(("key", m.group(6)))
+        elif m.group(7) is not None:
+            toks.append(("key", m.group(7)))
+    return toks
+
+
+def _jp_recursive(node, key):
+    """$..key —— 递归找出所有同名 key 的值。"""
+    out, stack = [], [node]
+    while stack:
+        cur = stack.pop()
+        if isinstance(cur, dict):
+            for k, v in cur.items():
+                if k == key:
+                    out.append(v)
+                stack.append(v)
+        elif isinstance(cur, list):
+            stack.extend(cur)
+    return out
+
+
+def jsonpath_objects(root, expr):
+    """JSONPath 简版，返回原始对象（dict/list），支持 .. .* [*] [n]。"""
+    if isinstance(root, str):
+        try:
+            import json as _json
+            root = _json.loads(root)
+        except Exception:
+            return []
+    if not isinstance(root, (dict, list)):
+        return []
+    path = (expr or "").strip()
+    if path.startswith("$"):
+        path = path[1:]
+    if not path:
+        return [root]
+
+    cur = [root]
+    for kind, val in _jp_tokens(path):
+        nxt = []
+        for item in cur:
+            if kind == "rec":
+                nxt.extend(_jp_recursive(item, val))
+            elif kind == "key":
+                if isinstance(item, dict):
+                    if val in item:
+                        nxt.append(item[val])
+                elif isinstance(item, list):
+                    for it in item:
+                        if isinstance(it, dict) and val in it:
+                            nxt.append(it[val])
+            elif kind == "wild":
+                if isinstance(item, dict):
+                    nxt.extend(item.values())
+                elif isinstance(item, list):
+                    nxt.extend(item)
+            elif kind == "idx":
+                if isinstance(item, list):
+                    i = int(val)
+                    if -len(item) <= i < len(item):
+                        nxt.append(item[i])
+        cur = nxt
+    return cur
+
+
 # 结尾取值关键字（小写）
 _VALUE_WORDS = {
     "text", "owntext", "html", "all", "textnodes", "content", "outerhtml", "innerhtml",
@@ -420,64 +515,15 @@ class RuleResolver:
     _JSON_TOKEN = re.compile(r"""\.?([A-Za-z0-9_\u4e00-\u9fa5\-]+)|\[(\d+|\*)\]|\['([^']+)'\]|\["([^"]+)"\]""")
 
     def _jsonpath(self, root, expr):
-        if isinstance(root, str):
-            try:
-                root = json.loads(root)
-            except Exception:
-                return []
-        if not isinstance(root, (dict, list)):
-            return []
-        if expr in ("$", "$."):
-            return [_to_str(root)]
-
-        path = expr[1:]
-        if path.startswith("."):
-            path = path[1:]
-
-        tokens = []
-        pos = 0
-        for m in self._JSON_TOKEN.finditer(path):
-            if m.start() != pos:
-                break
-            pos = m.end()
-            if m.group(1):
-                tokens.append(("key", m.group(1)))
-            elif m.group(2):
-                tokens.append(("idx", m.group(2)))
-            elif m.group(3) is not None:
-                tokens.append(("key", m.group(3)))
-            elif m.group(4) is not None:
-                tokens.append(("key", m.group(4)))
-
-        cur = [root]
-        for kind, val in tokens:
-            nxt = []
-            for item in cur:
-                if kind == "key":
-                    if isinstance(item, dict) and val in item:
-                        nxt.append(item[val])
-                    elif isinstance(item, list):
-                        for it in item:
-                            if isinstance(it, dict) and val in it:
-                                nxt.append(it[val])
-                else:
-                    if isinstance(item, list):
-                        if val == "*":
-                            nxt.extend(item)
-                        else:
-                            i = int(val)
-                            if -len(item) <= i < len(item):
-                                nxt.append(item[i])
-            cur = nxt
-
+        vals = jsonpath_objects(root, expr)
         out = []
-        for v in cur:
+        for v in vals:
             out.append(_to_str(v))
         return [_norm_ws(x) for x in out if _norm_ws(x)]
 
     def _json_key(self, obj, key):
         """在 dict/list 上取 key（支持 a.b 形式）。"""
-        parts = [p for p in key.split(".") if p]
+        parts = [p for p in key.split(".") if p and p != "$"]
         cur = [obj]
         for p in parts:
             nxt = []

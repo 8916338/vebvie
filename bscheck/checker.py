@@ -66,7 +66,8 @@ def reason_step(reason):
 
 class CheckResult:
     __slots__ = ("ok", "reason", "delay_ms", "t_search", "t_toc", "t_content",
-                 "book", "chapters", "content_len", "detail")
+                 "book", "chapters", "content_len", "detail",
+                 "book_url", "first_chapter", "search_url")
 
     def __init__(self):
         self.ok = False
@@ -79,6 +80,10 @@ class CheckResult:
         self.chapters = 0
         self.content_len = 0
         self.detail = ""
+        # 中间结果：修书源时要用（不写进报告）
+        self.book_url = ""
+        self.first_chapter = ""
+        self.search_url = ""
 
     def to_dict(self):
         return {
@@ -171,6 +176,11 @@ class SourceChecker:
         except Exception:
             pass
 
+        # 书源写了 {{cookie.removeCookie(source.key)}} 的，要在搜索前清 cookie：
+        # 这类站带上网页 cookie 去搜索会直接返回空页/热门页（阅读器本身就会清）。
+        if "removeCookie" in search_url:
+            self.fetcher.clear_cookies()
+
         # ---------------- 1. 搜索 ----------------
         t0 = time.time()
         tpl, opts = parse_search_url(search_url)
@@ -256,6 +266,26 @@ class SourceChecker:
                     break
 
         if not nodes:
+            # 有些站对短时间内的重复搜索直接返回空页/热门页（限流）。
+            # 隔一下再打一次，避免把活着但被限流的源误判成失效。
+            time.sleep(1.0)
+            self.fetcher.clear_cookies()
+            r2 = self.fetcher.request(url, method=method, body=body, headers=headers,
+                                      referer=base + "/")
+            if r2.ok and r2.status < 400:
+                p2 = self._doc_of(r2.text, url)
+                if p2 is not None:
+                    try:
+                        n2 = self._select(p2, book_list_rule, r2.url or url) \
+                            if book_list_rule else [p2]
+                    except JsRuleError:
+                        n2 = []
+                    if n2:
+                        nodes = n2
+                        page = p2
+                        s_base = r2.url or url
+
+        if not nodes:
             res.reason = F_SEARCH_EMPTY
             return
 
@@ -284,6 +314,8 @@ class SourceChecker:
             res.detail = "搜到 %d 个条目但取不到书名/链接" % len(nodes)
             return
         res.book = picked[0][:40]
+        res.book_url = picked[1]
+        res.search_url = s_base
 
         # ---------------- 2. 详情 → 目录 ----------------
         t1 = time.time()
@@ -368,6 +400,7 @@ class SourceChecker:
             res.reason = F_TOC_EMPTY
             res.detail = "章节链接取不到"
             return
+        res.first_chapter = chapters[min(2, len(chapters) - 1)][1]
 
         # ---------------- 3. 正文 ----------------
         t2 = time.time()
@@ -531,6 +564,9 @@ class SourceChecker:
                 got = _jsonpath_nodes(node, p if p.startswith("$") else "$." + p)
                 return str(got[0]) if got else ""
             rule = re.sub(r"\{\{([^}]+)\}\}", _repl, rule)
+            # 替换完是纯地址（{{$._id}} 这种拼接写法），直接当结果
+            if re.match(r"^https?://", rule.strip()):
+                return rule.strip()
         r = RuleResolver()
         return r.eval_one(node, rule, base)
 
@@ -550,51 +586,6 @@ def _strip(u):
 
 
 def _jsonpath_nodes(root, expr):
-    """JSONPath 简版，返回原始对象列表（不是字符串）。"""
-    if isinstance(root, str):
-        try:
-            root = json.loads(root)
-        except Exception:
-            return []
-    if not isinstance(root, (dict, list)):
-        return []
-    path = expr.strip()
-    if path.startswith("$"):
-        path = path[1:]
-    if path.startswith("."):
-        path = path[1:]
-    if not path:
-        return [root]
-
-    tokens = []
-    for m in re.finditer(r"""\.?([A-Za-z0-9_\u4e00-\u9fa5\-]+)|\[(\d+|\*)\]|\['([^']+)'\]|\["([^"]+)"\]""", path):
-        if m.group(1):
-            tokens.append(("key", m.group(1)))
-        elif m.group(2):
-            tokens.append(("idx", m.group(2)))
-        elif m.group(3) is not None:
-            tokens.append(("key", m.group(3)))
-        elif m.group(4) is not None:
-            tokens.append(("key", m.group(4)))
-
-    cur = [root]
-    for kind, val in tokens:
-        nxt = []
-        for item in cur:
-            if kind == "key":
-                if isinstance(item, dict) and val in item:
-                    nxt.append(item[val])
-                elif isinstance(item, list):
-                    for it in item:
-                        if isinstance(it, dict) and val in it:
-                            nxt.append(it[val])
-            else:
-                if isinstance(item, list):
-                    if val == "*":
-                        nxt.extend(item)
-                    else:
-                        i = int(val)
-                        if -len(item) <= i < len(item):
-                            nxt.append(item[i])
-        cur = nxt
-    return cur
+    """JSONPath 简版，返回原始对象列表（bookList 用）。"""
+    from .rules import jsonpath_objects
+    return jsonpath_objects(root, expr)
