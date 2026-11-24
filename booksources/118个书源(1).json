@@ -5759,4 +5759,5 @@
     "searchUrl": "https://cxb-pro.cread.com:443/cx/searchbooks,{\n  \"method\": \"POST\",\n  \"body\": \"pageNo={{page}}&version=5.6.0&keyword={{key}}\",\n  \"headers\": \"{packname:com.mfyueduqi.book,cnid:14001,version:5.6.0,vcode:98,platform:android,uid:90684954,appname:aks,oscode:28,channelId:14001}\"\n}",
     "weight": 0
   }
+
 ]
