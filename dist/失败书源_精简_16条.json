@@ -1,0 +1,178 @@
+[
+  {
+    "bookSourceName": "环安小说网🎃",
+    "bookSourceUrl": "https://www.savilletailor.com#🎃",
+    "bookSourceGroup": "",
+    "zakaDomain": "savilletailor.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索无结果",
+    "zakaDetail": "",
+    "zakaFailTime": 1481
+  },
+  {
+    "bookSourceName": "⭕️PO文学",
+    "bookSourceUrl": "https://www.po18to.com",
+    "bookSourceGroup": "小说（Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1）",
+    "zakaDomain": "po18to.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索无结果",
+    "zakaDetail": "",
+    "zakaFailTime": 3029
+  },
+  {
+    "bookSourceName": "闪爵小说网🎃",
+    "bookSourceUrl": "https://www.pokemon-card.net#🎃",
+    "bookSourceGroup": "",
+    "zakaDomain": "pokemon-card.net",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "HTTP 404",
+    "zakaFailTime": 546
+  },
+  {
+    "bookSourceName": "小强小说网",
+    "bookSourceUrl": "http://123xiaoqiang.me",
+    "bookSourceGroup": "小说（Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1）",
+    "zakaDomain": "123xiaoqiang.me",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "HTTP 403",
+    "zakaFailTime": 2301
+  },
+  {
+    "bookSourceName": "海外书包🎃",
+    "bookSourceUrl": "https://www.haiwaishubao.com",
+    "bookSourceGroup": "Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1",
+    "zakaDomain": "haiwaishubao.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "HTTP 403",
+    "zakaFailTime": 2480
+  },
+  {
+    "bookSourceName": "蜘蛛小说网",
+    "bookSourceUrl": "https://www.zhizhuxs.com",
+    "bookSourceGroup": "小说（Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1）",
+    "zakaDomain": "zhizhuxs.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "HTTP 403",
+    "zakaFailTime": 2492
+  },
+  {
+    "bookSourceName": "呗希书网（魔法）",
+    "bookSourceUrl": "https://www.zhongeruye.com",
+    "bookSourceGroup": "小说（Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1）",
+    "zakaDomain": "zhongeruye.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "HTTP 403",
+    "zakaFailTime": 2531
+  },
+  {
+    "bookSourceName": "27姐姐🪜",
+    "bookSourceUrl": "https://www.27jj.org",
+    "bookSourceGroup": "小说（Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1）",
+    "zakaDomain": "27jj.org",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "HTTP 403",
+    "zakaFailTime": 2784
+  },
+  {
+    "bookSourceName": "💗 情人游戏",
+    "bookSourceUrl": "https://m.qingrenyouxi.com",
+    "bookSourceGroup": "小说（Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1）",
+    "zakaDomain": "m.qingrenyouxi.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "timeout",
+    "zakaFailTime": 32399
+  },
+  {
+    "bookSourceName": "📖肉电子书",
+    "bookSourceUrl": "http://www.rstxt.com/#🍖",
+    "bookSourceGroup": "Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1",
+    "zakaDomain": "rstxt.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "timeout",
+    "zakaFailTime": 32571
+  },
+  {
+    "bookSourceName": "🎃肉文屋🎃",
+    "bookSourceUrl": "https://m.rouwenwu16.com#🎃",
+    "bookSourceGroup": "Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1",
+    "zakaDomain": "m.rouwenwu16.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "搜索",
+    "zakaReason": "搜索请求失败",
+    "zakaDetail": "timeout",
+    "zakaFailTime": 33143
+  },
+  {
+    "bookSourceName": "🎃星星小说🎃",
+    "bookSourceUrl": "http://www.xxtxt.com#🎃",
+    "bookSourceGroup": "Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1",
+    "zakaDomain": "xxtxt.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "目录",
+    "zakaReason": "目录页打不开",
+    "zakaDetail": "HTTP 502",
+    "zakaFailTime": 174
+  },
+  {
+    "bookSourceName": "🎃笔趣阁🎃#70",
+    "bookSourceUrl": "https://www.xyuzhaiwu2.com",
+    "bookSourceGroup": "小说（Tg敏感资源库:https://t.me/soumgzy）",
+    "zakaDomain": "xyuzhaiwu2.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "目录",
+    "zakaReason": "目录页打不开",
+    "zakaDetail": "HTTP 404",
+    "zakaFailTime": 19544
+  },
+  {
+    "bookSourceName": "🔞 肉书屋",
+    "bookSourceUrl": "https://m.roushuwu7.com#yc1101",
+    "bookSourceGroup": "Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1",
+    "zakaDomain": "m.roushuwu7.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "目录",
+    "zakaReason": "目录页打不开",
+    "zakaDetail": "timeout",
+    "zakaFailTime": 19718
+  },
+  {
+    "bookSourceName": "永久小说网",
+    "bookSourceUrl": "http://www.yjxsw.com",
+    "bookSourceGroup": "Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1",
+    "zakaDomain": "yjxsw.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "正文",
+    "zakaReason": "正文为空",
+    "zakaDetail": "",
+    "zakaFailTime": 256
+  },
+  {
+    "bookSourceName": "追书网",
+    "bookSourceUrl": "https://www.zhuishu.com",
+    "bookSourceGroup": "Tg敏感资源库\nhttps://t.me/+Gk4E1u5cvaxhYTY1",
+    "zakaDomain": "zhuishu.com",
+    "zakaCheck": "fail",
+    "zakaFailStep": "正文",
+    "zakaReason": "正文为空",
+    "zakaDetail": "",
+    "zakaFailTime": 2136
+  }
+]
