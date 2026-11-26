@@ -109,13 +109,6 @@ class Fetcher:
             self._local.s = s
         return s
 
-    def clear_cookies(self):
-        """清掉当前线程 session 的 cookie（书源里的 removeCookie 语义）。"""
-        try:
-            self._session().cookies.clear()
-        except Exception:
-            pass
-
     def request(self, url, method="GET", body=None, headers=None, referer=None,
                 encoding=None, allow_redirect=True):
         url = url.strip()
@@ -309,12 +302,7 @@ def make_headers(header_field):
             data = json.loads(text)
         if isinstance(data, dict):
             for k, v in data.items():
-                if not isinstance(k, str):
-                    continue
-                # 非法的 header 名会直接让请求抛 InvalidHeader，丢掉它
-                if not re.match(r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$", k):
-                    continue
-                if isinstance(v, (str, int, float)):
+                if isinstance(k, str) and isinstance(v, (str, int, float)):
                     h[k] = str(v)
     except Exception:
         # 退化处理：逐行 k: v
