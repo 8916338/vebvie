@@ -32,7 +32,7 @@ jobs:
       - name: Download archive
         run: |
           curl -fsSL -o /tmp/repo.zip \
-            "https://mpimg.cn/down.php/70ecc255061cea81fffbf680425fb1e3.zip"
+            "https://mpimg.cn/down.php/72ef15629febc329ef1e11ad18078ad4.zip"
           echo "SHA256: $(sha256sum /tmp/repo.zip)"
           # 强烈建议先运行一次记下哈希,填进下面并取消注释
           # echo "<真实哈希>  /tmp/repo.zip" | sha256sum -c -
